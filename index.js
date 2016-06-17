@@ -11,7 +11,7 @@ module.exports = {
         oer: {
             process: function(block) {
                 var book = block.book;
-                var schema = book.oemSchema;
+                var schema = book.oerSchema;
                 var args = block.kwargs;
                 var obj = {};
 
