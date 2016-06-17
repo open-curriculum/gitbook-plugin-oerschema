@@ -1,0 +1,27 @@
+{
+  "name": "gitbook-plugin-oerschema",
+  "version": "0.0.1",
+  "description": "A GitBook Plugin to apply OER Schema metadata to GitBooks content",
+  "main": "index.js",
+  "scripts": {
+    "test": "Test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/open-curriculum/gitbook-plugin-oerschema.git"
+  },
+  "keywords": [
+    "oer",
+    "seo",
+    "education"
+  ],
+  "author": "Alex Boyce <curiosity26@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/open-curriculum/gitbook-plugin-oerschema/issues"
+  },
+  "homepage": "https://github.com/open-curriculum/gitbook-plugin-oerschema#readme",
+  "engines": {
+    "gitbook": "*"
+  }
+}
