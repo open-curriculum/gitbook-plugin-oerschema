@@ -23,5 +23,10 @@
   "homepage": "https://github.com/open-curriculum/gitbook-plugin-oerschema#readme",
   "engines": {
     "gitbook": "*"
+  },
+  "devDependencies": {
+    "gitbook-tester": "*",
+    "mocha": "*",
+    "should": "*"
   }
 }

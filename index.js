@@ -1,105 +1,101 @@
 module.exports = {
-    website: {
-        'body:start': function() {
-            return '<div prefix="oer: http://oerschema.org/">';
-        },
-        'body:end': function() {
-            return '</div>';
-        }
-    },
     blocks: {
-        oer: {
-            process: function(block) {
-                var book = block.book;
-                var schema = book.oerSchema;
-                var args = block.kwargs;
-                var obj = {};
+        "oer": {
+            blocks: ['property', 'endproperty', 'resource', 'endresource'],
+            process: function(parent) {
+                var blocks = parent.blocks;
+                var body = parent.body;
 
-                if (args.type) {
-                    obj.type = 'oer:' + args.type;
-                    delete args.type;
-                }
+                for (var i = 0; i < blocks.length; i++) {
+                    var block = blocks[i];
 
-                if (args.id) {
-                    obj.resource = args.id.search(/#|^https?:\/\//gi) >= 0 ? args.id : '#' + args.id;
-                    delete args.id;
-                }
+                    if (!!block.name && /^(end)/.test(block.name)) {
+                        body += block.body;
+                        continue;
+                    }
 
-                if (args.for) {
-                    obj.href = args.for.search(/#|^https?:\/\//gi) >= 0 ? args.for : '#' + args.for;
-                    delete args.for;
-                }
-
-                if (args.property) {
-                    obj.property = 'oer:' + args.property;
-                }
-                else {
-                    for (var prop in args) {
-                        var p = {
-                                'property': prop
-                            },
-                            v = args[prop]
-                            ;
-
-                        if (v.search(/#|^https?:\/\//gi) >= 0) {
-                            p.href = v;
-                        }
-                        else {
-                            p.value = v;
-                        }
-
-                        schema.push(p);
+                    switch(block.name) {
+                        case 'property':
+                            body += printProperty(block);
+                            break;
+                        case 'resource':
+                            body += printResource(block.body, block);
+                            break;
                     }
                 }
 
-                schema.push(obj);
-
-                if (obj.resource) {
-                    var tag = block.content.test(/<\w+.*?\/?>/gmi) ? 'div' : 'span';
-                    return '<' + tag + ' resource="' + obj.resource + '">' + block.content + '</' + tag + '>';
-                }
-
-                return block.content;
+                return printResource(body, parent);
+            }
+        },
+        "resource": {
+            process: function(block) {
+                return printResource(block.body, block);
+            }
+        },
+        "property": {
+            process: function(block) {
+                return printProperty(block);
             }
         }
     },
     hooks: {
-        init: function () {
-            this.book.oerSchema = [];
-        },
-        'page:before': function(page) {
-            var schema = this.book.oerSchema,
-                output;
+        "page": function(page) {
+            page.content = '<div prefix="oer: http://oerschema.org/">' + page.content + '</div>';
 
-            schema.forEach(function(item, i, arr) {
-                output = '<';
-
-                if (!item.type && !item.href && (item.property || item.value)) {
-                    output += 'meta name="' + item.property + '" content="' + (item.resource || item.value) + '" ';
-                }
-                else {
-                    output += 'link ';
-
-                    if (item.type) {
-                        output += 'typeof="' + item.type + '" ';
-                    }
-
-                    if (item.property) {
-                        output += 'property="' + item.property + '" ';
-                    }
-
-                    if (item.href) {
-                        output += ' href="' + item.href + '" ';
-                    }
-                    else if (item.resource) {
-                        output += ' href="' + item.resource + '" ';
-                    }
-                }
-
-                output += '>';
-                page.content += output;
-            });
-
+            return page;
         }
     }
 };
+
+function isBlocked(str) {
+    return /<\w+(?!span|meta|link|a|b|em)\/?>(\w.*?\w\s*\|)|(^\={2,}$)/gmi.test(str);
+}
+
+function isResourcePrefixed(r) {
+    return /^(https?:\/\/)|#/gi.test(r);
+}
+
+function printResource(body, block) {
+    var attr = block.kwargs;
+    var tag = isBlocked(body) ? 'div' : 'span';
+    var output = '<' + tag + ' ';
+
+    if (attr.id) {
+        output += 'resource="' + (
+                isResourcePrefixed(attr.id) ? attr.id : '#' + attr.id
+            ) + '" ';
+    }
+
+    if (attr.type) {
+        output += 'typeof="oer:' + attr.type + '" '
+    }
+
+    if (attr.property) {
+        output += 'property="oer:' + attr.property + '" ';
+    }
+
+    output += '>' + body + '</' + tag + '>';
+
+    return output;
+}
+
+function printProperty(block) {
+    var attr = block.kwargs;
+
+    if (!attr.name) {
+        throw new Error("Properties require a name");
+    }
+
+    if (attr.value) {
+        return '<meta property="oer:' + attr.name + '" content="' + attr.value + '">' + block.body;
+    }
+
+    if (attr.for) {
+        return '<link property="oer:' + attr.name + '" href="' +
+        isResourcePrefixed(attr.value) ? attr.value : '#' + attr.value + '">' + block.body;
+    }
+
+    var tag = isBlocked(block.body) ? 'div' : 'span';
+
+    return '<' + tag + ' property="oer:' + attr.name + '">' + block.body + '</' + tag + '>';
+}
