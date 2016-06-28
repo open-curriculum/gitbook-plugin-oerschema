@@ -4,7 +4,7 @@
   "description": "A GitBook Plugin to apply OER Schema metadata to GitBooks content",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha"
+    "test": "./node_modules/mocha/bin/mocha ./test"
   },
   "repository": {
     "type": "git",
