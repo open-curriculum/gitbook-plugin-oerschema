@@ -28,7 +28,7 @@ describe('Utilities', function() {
 describe('Rendering Functions', function() {
     it('should parse link property from block', function () {
         var block = {
-            name: 'property',
+            name: 'oer_property',
             body: '',
             args: [],
             kwargs: {
@@ -45,7 +45,7 @@ describe('Rendering Functions', function() {
 
     it('should parse span property from block', function () {
         var block = {
-            name: 'property',
+            name: 'oer_property',
             body: 'This is test content',
             args: [],
             kwargs: {
@@ -62,7 +62,7 @@ describe('Rendering Functions', function() {
 
     it('should parse meta property from block', function () {
         var block = {
-            name: 'property',
+            name: 'oer_property',
             body: '',
             args: [],
             kwargs: {
@@ -79,7 +79,7 @@ describe('Rendering Functions', function() {
 
     it('should parse oer resource from block', function() {
         var block = {
-            name: 'oer',
+            name: 'oer_resource',
             body: '',
             args: [],
             kwargs: {
@@ -88,7 +88,7 @@ describe('Rendering Functions', function() {
             },
             blocks: [
                 {
-                    name: 'property',
+                    name: 'oer_property',
                     body: 'Prop value',
                     args: [],
                     kwargs: {
@@ -105,7 +105,7 @@ describe('Rendering Functions', function() {
 
     it('should parse oer resource from block', function() {
         var block = {
-            name: 'oer',
+            name: 'oer_resource',
             body: '',
             args: [],
             kwargs: {
@@ -114,7 +114,7 @@ describe('Rendering Functions', function() {
             },
             blocks: [
                 {
-                    name: 'property',
+                    name: 'oer_property',
                     body: 'Prop value',
                     args: [],
                     kwargs: {
@@ -144,9 +144,9 @@ describe('GitBook', function() {
         tester
             .builder()
             .withLocalPlugin(require('path').join(__dirname, '..'))
-            .withContent('{% oer type="Resource" %}' +
-                '{% property name="name" %}Prop value{% endproperty %}' +
-                '{% endoer %}')
+            .withContent('{% oer_resource type="Resource" %}' +
+                '{% oer_property name="name" %}Prop value{% endoer_property %}' +
+                '{% endoer_resource %}')
             .create()
             .then(function (result) {
                 sanitizeAutoNames(result[0].content)
@@ -165,18 +165,44 @@ describe('GitBook', function() {
             .builder()
             .withLocalPlugin(require('path').join(__dirname, '..'))
             .withContent(
-                '{% resource id="res2", type="Resource" %}' +
-                '{% property name="name", for="res1", type="Text" %}Prop value 1{% endproperty %}' +
-                '{% endresource %}' +
-                '{% resource id="res1", type="Resource" %}' +
-                '{% property name="name", for="res2", type="Text" %}Prop value 2{% endproperty %}' +
-                '{% endresource %}')
+                '{% oer_resource id="res2", type="Resource" %}' +
+                '{% oer_property name="name", for="res1", type="Text" %}Prop value 1{% endoer_property %}' +
+                '{% endoer_resource %}' +
+                '{% oer_resource id="res1", type="Resource" %}' +
+                '{% oer_property name="name", for="res2", type="Text" %}Prop value 2{% endoer_property %}' +
+                '{% endoer_resource %}')
             .create()
             .then(function(result) {
                 sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/"><p>' +
                     '<span resource="#res2" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 1</span>' +
                     '</span><span resource="#res1" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 2</span></span></p>\n' +
                     '<link about="#res1" rel="oer:name" href="#oer"><link about="#res2" rel="oer:name" href="#oer"></div>');
+                testDone();
+            }, function(err) {
+                should(err).not.be.ok();
+                testDone();
+            })
+            .done()
+        ;
+    });
+
+    it('should have reference as a property', function(testDone) {
+        tester
+            .builder()
+            .withLocalPlugin(require('path').join(__dirname, '..'))
+            .withContent(
+                '{% oer_resource id="res2", type="Resource" %}' +
+                '{% oer_property name="name", for="res1", type="Text" %}Prop value 1{% endoer_property %}' +
+                '{% endoer_resource %}' +
+                '{% oer_resource id="res1", type="Resource", property="description", for="res2" %}' +
+                '{% oer_property name="name", for="res2", type="Text" %}Prop value 2{% endoer_property %}' +
+                '{% endoer_resource %}')
+            .create()
+            .then(function(result) {
+                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/"><p>' +
+                    '<span resource="#res2" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 1</span>' +
+                    '</span><span resource="#oer" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 2</span></span></p>\n' +
+                    '<link about="#res1" rel="oer:name" href="#oer"><link about="#res2" rel="oer:name" href="#oer"><link resource="#res1" about="#res2" rel="oer:description" href="#oer"></div>');
                 testDone();
             }, function(err) {
                 should(err).not.be.ok();
