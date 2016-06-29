@@ -46,9 +46,14 @@ Properties are defined using the `{% oer_property %}` tag and has the following 
 ### Examples
 
 ```Markdown
-
-{% oer_resource id="#main",  %}
-    {% oer_property %}
+{% oer_resource id="#main", type="Resource"  %}
+    {% oer_property name="name" %}
+    # My OER Resource
+    {% endoer_property %}
+    {% oer_property name="mainContentOfPage" %}
+        This is the content of my resource. It's stuff.
+    {% endoer_property %}
+    {% oer_property name="image" value="http://example.com/image.jpg" %}
 {% endoer_resource %}
 
 ```
