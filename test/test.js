@@ -57,7 +57,7 @@ describe('Rendering Functions', function() {
             blocks: []
         };
 
-        util.printProperty(block).should.be.equal('<span property="oer:name" resource="#res1" typeof="oer:Text" content="Test Property">This is test content</span>');
+        util.printProperty(block).should.be.equal('<div property="oer:name" resource="#res1" typeof="oer:Text" content="Test Property"><p>This is test content</p></div>');
     });
 
     it('should parse meta property from block', function () {
@@ -100,7 +100,7 @@ describe('Rendering Functions', function() {
             ]
         };
 
-        util.printResource(block.body, block).should.be.equal('<span resource="#res1" typeof="oer:Resource"><span property="oer:name" resource="#prop1" typeof="oer:Text">Prop value</span></span>');
+        util.printResource(block.body, block).should.be.equal('<div resource="#res1" typeof="oer:Resource"><div property="oer:name" resource="#prop1" typeof="oer:Text"><p>Prop value</p></div></div>');
     });
 
     it('should parse oer resource from block', function() {
@@ -128,7 +128,67 @@ describe('Rendering Functions', function() {
         };
 
         sanitizeAutoNames(util.printResource(block.body, block))
-            .should.be.equal('<span resource="#res1" typeof="oer:Resource"><span resource="#oer" typeof="oer:Text">Prop value<oer about="#res2" rel="oer:name" href="#oer"></span></span>');
+            .should.be.equal('<div resource="#res1" typeof="oer:Resource"><div resource="#oer" typeof="oer:Text"><p>Prop value</p><oer about="#res2" rel="oer:name" href="#oer"></div></div>');
+    });
+
+    it('should parse oer resource with property from block', function() {
+        var block = {
+            body: '',
+            args: [],
+            kwargs: {},
+            blocks: [
+                {
+                    name: 'oer_resource',
+                    body: '',
+                    args: [],
+                    kwargs: {
+                        name: 'name',
+                        id: '#res3',
+                        type: 'Resource'
+                    },
+                    blocks: [
+                        {
+                            name: 'oer_property',
+                            body: 'Prop value 1',
+                            args: [],
+                            kwargs: {
+                                name: 'name',
+                                for: '#res4',
+                                type: 'Text'
+                            }
+                        }
+                    ]
+                },
+                {
+                    name: 'oer_resource',
+                    body: '',
+                    args: [],
+                    kwargs: {
+                        id: '#res4',
+                        for: '#res3',
+                        property: 'description',
+                        type: 'Resource'
+                    },
+                    blocks: [
+                        {
+                            name: 'oer_property',
+                            body: 'Prop value 2',
+                            args: [],
+                            kwargs: {
+                                name: 'name',
+                                type: 'Text',
+                                for: 'res3'
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+
+        sanitizeAutoNames(util.printResource(block.body, block)).should.be.equal('<div><div resource="#res3" typeof="oer:Resource">' +
+            '<div typeof="oer:Text" resource="#oer"><p>Prop value 1</p><oer about="#res4" rel="oer:name" href="#oer"></div>' +
+            '</div><div resource="#oer" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 2</p><oer about="#res3" rel="oer:name" href="#oer"></div>' +
+            '<oer resource="#res4" about="#res3" rel="oer:description" href="#oer"></div></div>');
     });
 
     it('should render page', function() {
@@ -145,12 +205,14 @@ describe('GitBook', function() {
             .builder()
             .withLocalPlugin(require('path').join(__dirname, '..'))
             .withContent('{% oer_resource type="Resource" %}' +
-                '{% oer_property name="name" %}Prop value{% endoer_property %}' +
+                '{% oer_property name="name" %}' +
+                '## Prop value' +
+                '{% endoer_property %}' +
                 '{% endoer_resource %}')
             .create()
             .then(function (result) {
                 sanitizeAutoNames(result[0].content)
-                    .should.equal('<div prefix="oer: http://oerschema.org/"><p><span typeof="oer:Resource"><span property="oer:name">Prop value</span></span></p>\n</div>');
+                    .should.equal('<div prefix="oer: http://oerschema.org/"><div typeof="oer:Resource"><div property="oer:name"><h2 id="prop-value">Prop value</h2></div></div>\n</div>');
                 testDone();
             }, function (err) {
                 should(err).not.be.ok();
@@ -173,9 +235,9 @@ describe('GitBook', function() {
                 '{% endoer_resource %}')
             .create()
             .then(function(result) {
-                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/"><p>' +
-                    '<span resource="#res2" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 1</span>' +
-                    '</span><span resource="#res1" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 2</span></span></p>\n' +
+                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/">' +
+                    '<div resource="#res2" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 1</p></div>' +
+                    '</div><div resource="#res1" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 2</p></div></div>\n' +
                     '<link about="#res1" rel="oer:name" href="#oer"><link about="#res2" rel="oer:name" href="#oer"></div>');
                 testDone();
             }, function(err) {
@@ -191,18 +253,18 @@ describe('GitBook', function() {
             .builder()
             .withLocalPlugin(require('path').join(__dirname, '..'))
             .withContent(
-                '{% oer_resource id="res2", type="Resource" %}' +
-                '{% oer_property name="name", for="res1", type="Text" %}Prop value 1{% endoer_property %}' +
+                '{% oer_resource id="res3", type="Resource" %}' +
+                '{% oer_property name="name", for="res4", type="Text" %}Prop value 3{% endoer_property %}' +
                 '{% endoer_resource %}' +
-                '{% oer_resource id="res1", type="Resource", property="description", for="res2" %}' +
-                '{% oer_property name="name", for="res2", type="Text" %}Prop value 2{% endoer_property %}' +
+                '{% oer_resource id="res4", type="Resource", property="description", for="res3" %}' +
+                '{% oer_property name="name", for="res3", type="Text" %}Prop value 4{% endoer_property %}' +
                 '{% endoer_resource %}')
             .create()
             .then(function(result) {
-                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/"><p>' +
-                    '<span resource="#res2" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 1</span>' +
-                    '</span><span resource="#oer" typeof="oer:Resource"><span typeof="oer:Text" resource="#oer">Prop value 2</span></span></p>\n' +
-                    '<link about="#res1" rel="oer:name" href="#oer"><link about="#res2" rel="oer:name" href="#oer"><link resource="#res1" about="#res2" rel="oer:description" href="#oer"></div>');
+                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/">' +
+                    '<div resource="#res3" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 3</p></div>' +
+                    '</div><div resource="#oer" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 4</p></div></div>\n' +
+                    '<link about="#res4" rel="oer:name" href="#oer"><link about="#res3" rel="oer:name" href="#oer"><link resource="#res4" about="#res3" rel="oer:description" href="#oer"></div>');
                 testDone();
             }, function(err) {
                 should(err).not.be.ok();

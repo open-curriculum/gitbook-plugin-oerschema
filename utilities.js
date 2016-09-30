@@ -1,6 +1,9 @@
 /**
  * Created by acb222 on 6/28/16.
  */
+
+var md = require("markdown").markdown;
+
 module.exports = {
     isBlocked: function (str) {
         return /(<(?!(\/?(span|meta|link|a|b|em|strong|i|u|oer))).*?\/?>)|(\w.*?\w\s*\|)|(^\={2,}$)|(^\*\s?[^\*]+$)/gmi.test(str) === true;
@@ -20,7 +23,32 @@ module.exports = {
     printResource: function (body, block) {
         try {
             var attr = block.kwargs;
-            var tag = this.isBlocked(body) ? 'div' : 'span';
+            var inner = '';
+
+            if (block.blocks && block.blocks.length) {
+                var blocks = block.blocks;
+                for (var i = 0; i < blocks.length; i++) {
+                    var b = blocks[i];
+
+                    if (!!b.name && /^(end)/.test(b.name)) {
+                        inner += md.toHTML(b.body);
+                        continue;
+                    }
+
+                    switch (b.name) {
+                        case 'oer_property':
+                            inner += this.printProperty(b);
+                            break;
+                        case 'oer_resource':
+                            inner += this.printResource(b.body, b);
+                            break;
+                    }
+                }
+            }
+
+            inner += md.toHTML(body);
+
+            var tag = this.isBlocked(inner) ? 'div' : 'span';
             var output = '<' + tag;
             var oAttr = {};
 
@@ -36,7 +64,7 @@ module.exports = {
                 if (attr.for) {
                     var res = oAttr.resource;
                     oAttr.resource = this.generateResourceName();
-                    body += '<oer resource="' + res + '" about="' + this.sanitizePrefix(attr.for) + '" rel="' + this.sanitizeName(attr.property) + '" href="' + oAttr.resource + '">';
+                    inner += '<oer resource="' + res + '" about="' + this.sanitizePrefix(attr.for) + '" rel="' + this.sanitizeName(attr.property) + '" href="' + oAttr.resource + '">';
                 } else {
                     oAttr.property = this.sanitizeName(attr.property);
                 }
@@ -46,30 +74,7 @@ module.exports = {
                 output += ' ' + n + '="' + oAttr[n] + '"';
             }
 
-            output += '>';
-
-            if (block.blocks && block.blocks.length) {
-                var blocks = block.blocks;
-                for (var i = 0; i < blocks.length; i++) {
-                    var b = blocks[i];
-
-                    if (!!b.name && /^(end)/.test(b.name)) {
-                        output += b.body;
-                        continue;
-                    }
-
-                    switch (b.name) {
-                        case 'oer_property':
-                            output += this.printProperty(b);
-                            break;
-                        case 'oer_resource':
-                            output += this.printResource(b.body, b);
-                            break;
-                    }
-                }
-            }
-
-            output += body + '</' + tag + '>';
+            output += '>' + inner + '</' + tag + '>';
         } catch (e) {
             output = e.message;
         }
@@ -81,6 +86,8 @@ module.exports = {
             tag,
             oAttr = {},
             output;
+
+        block.body = md.toHTML(block.body);
 
         if (!attr.name) {
             throw new Error("Properties require a name");
@@ -141,6 +148,8 @@ module.exports = {
                     content += matches[i].replace(/<oer\s/gim, '<link ');
                 }
             }
+
+            content = content.replace(/<p><div/, '<div').replace(/<\/div><\/p>/, '</div>');
 
             return '<div prefix="oer: http://oerschema.org/">' + content + '</div>';
         } catch (e) {

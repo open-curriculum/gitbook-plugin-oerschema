@@ -1,6 +1,6 @@
 {
   "name": "gitbook-plugin-oerschema",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A GitBook Plugin to apply OER Schema metadata to GitBooks content",
   "main": "index.js",
   "scripts": {
@@ -23,6 +23,9 @@
   "homepage": "https://github.com/open-curriculum/gitbook-plugin-oerschema#readme",
   "engines": {
     "gitbook": "*"
+  },
+  "dependencies": {
+    "markdown": "*"
   },
   "devDependencies": {
     "gitbook-tester": "*",
