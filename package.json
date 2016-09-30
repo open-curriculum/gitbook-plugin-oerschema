@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/open-curriculum/gitbook-plugin-oerschema#readme",
   "engines": {
-    "gitbook": "*"
+    "gitbook": "^3.2"
   },
   "dependencies": {
     "markdown": "*"
