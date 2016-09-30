@@ -205,14 +205,14 @@ describe('GitBook', function() {
             .builder()
             .withLocalPlugin(require('path').join(__dirname, '..'))
             .withContent('{% oer_resource type="Resource" %}' +
-                '{% oer_property name="name" %}' +
-                '## Prop value' +
+                '{% oer_property name="name" %}' + "\n" +
+                '## Prop value' + "\n" +
                 '{% endoer_property %}' +
                 '{% endoer_resource %}')
             .create()
             .then(function (result) {
-                sanitizeAutoNames(result[0].content)
-                    .should.equal('<div prefix="oer: http://oerschema.org/"><div typeof="oer:Resource"><div property="oer:name"><h2 id="prop-value">Prop value</h2></div></div>\n</div>');
+                sanitizeAutoNames(result[0].content.replace(/\n/g, ''))
+                    .should.equal('<div prefix="oer: http://oerschema.org/"><div typeof="oer:Resource"><div property="oer:name"><h2 id="prop-value">Prop value</h2></div></div></div>');
                 testDone();
             }, function (err) {
                 should(err).not.be.ok();
@@ -235,9 +235,9 @@ describe('GitBook', function() {
                 '{% endoer_resource %}')
             .create()
             .then(function(result) {
-                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/">' +
+                sanitizeAutoNames(result[0].content.replace(/\n/g, '')).should.equal('<div prefix="oer: http://oerschema.org/">' +
                     '<div resource="#res2" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 1</p></div>' +
-                    '</div><div resource="#res1" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 2</p></div></div>\n' +
+                    '</div><div resource="#res1" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 2</p></div></div>' +
                     '<link about="#res1" rel="oer:name" href="#oer"><link about="#res2" rel="oer:name" href="#oer"></div>');
                 testDone();
             }, function(err) {
@@ -261,9 +261,9 @@ describe('GitBook', function() {
                 '{% endoer_resource %}')
             .create()
             .then(function(result) {
-                sanitizeAutoNames(result[0].content).should.equal('<div prefix="oer: http://oerschema.org/">' +
+                sanitizeAutoNames(result[0].content.replace(/\n/g, '')).should.equal('<div prefix="oer: http://oerschema.org/">' +
                     '<div resource="#res3" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 3</p></div>' +
-                    '</div><div resource="#oer" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 4</p></div></div>\n' +
+                    '</div><div resource="#oer" typeof="oer:Resource"><div typeof="oer:Text" resource="#oer"><p>Prop value 4</p></div></div>' +
                     '<link about="#res4" rel="oer:name" href="#oer"><link about="#res3" rel="oer:name" href="#oer"><link resource="#res4" about="#res3" rel="oer:description" href="#oer"></div>');
                 testDone();
             }, function(err) {

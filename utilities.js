@@ -2,7 +2,7 @@
  * Created by acb222 on 6/28/16.
  */
 
-var md = require('markdown').markdown;
+var md = require("markdown").markdown;
 
 module.exports = {
     isBlocked: function (str) {
