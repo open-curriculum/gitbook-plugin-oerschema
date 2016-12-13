@@ -151,7 +151,7 @@ module.exports = {
 
             content = content.replace(/<p><div/, '<div').replace(/<\/div><\/p>/, '</div>');
 
-            return '<div prefix="oer: http://oerschema.org/">' + content + '</div>';
+            return '<div prefix="oer: http://oerschema.org/ schema:http://schema.org/ dc:http://purl.org/dc/terms/ foaf:http://xmlns.com/foaf/0.1/ cc:http://creativecommons.org/ns# bib:http://bib.schema.org">' + content + '</div>';
         } catch (e) {
             return e.message;
         }

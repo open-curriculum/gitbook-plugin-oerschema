@@ -43,17 +43,31 @@ Properties are defined using the `{% oer_property %}` tag and has the following 
 | value | The explicit value of the property. If not provided, it will be up to the schema interpreter to parse the appropriate value from the element's body |
 | href | A property can act as a link between two resources. Where `for` is the attribute connecting this property to its parent resource, `href` connects a child resource as the value of this property. |
 
-### Examples
+## Update 0.0.4
+
+In update 0.0.4, we've included the following common vocabularies. Now you can combine these vocabularies' types and properties with OER Schema. You can also use multiple types or properties within a `type=""` or `property=""` attribute by separating each type or property with a space and prefixing the type or property (even if it's from the OERSchema.org vocabulary).
+
+| Prefix | Vocabulary |
+|---|---|
+| oer: | [OERSchema.org](http://oerschema.org) - The default schema when a prefix is not provided |
+| schema: | [Schema.org](http://schema.org/) |
+| foaf: | [Friend-of-a-Friend](http://xmlns.com/foaf/0.1/) |
+| dc: | [Dublin Core](http://purl.org/dc/terms/) |
+| cc: | [Creative Commons](http://creativecommons.org/ns#) |
+| bib: | [Schema.org Bibliographic Extension](http://bib.schema.org/) |
+
+## Examples
 
 ```Markdown
 {% oer_resource id="#main", type="Resource"  %}
     {% oer_property name="name" %}
     # My OER Resource
     {% endoer_property %}
-    {% oer_property name="mainContentOfPage" %}
+    {% oer_property name="schema:mainContentOfPage oer:description" %}
         This is the content of my resource. It's stuff.
     {% endoer_property %}
     {% oer_property name="image" value="http://example.com/image.jpg" %}
+    {% oer_property name="cc:license" value="http://creativecommons.org/licenses/by-nc/3.0/" %}
 {% endoer_resource %}
 
 ```
